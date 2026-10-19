@@ -18,12 +18,15 @@ jobs:
           sudo apt install -y build-essential bc bison flex \
               libssl-dev libncurses-dev git wget unzip python3 gcc-aarch64-linux-gnu
 
-      - name: Download kernel source from upstream
-        run: |
-          curl -L https://codeload.github.com/ananjaser1211/Cronos_8890/zip/refs/heads/cronos -o kernel.zip
-          unzip -q kernel.zip
-          mv Cronos_8890-cronos Cronos
-          ls Cronos/drivers/input/touchscreen/wake_gestures.c
+      - name: Checkout kernel source from upstream
+        uses: actions/checkout@v4
+        with:
+          repository: ananjaser1211/Cronos_8890
+          ref: cronos
+          path: Cronos
+
+      - name: Verify kernel source
+        run: ls Cronos/drivers/input/touchscreen/wake_gestures.c
 
       - name: Patch DT2W
         run: |
