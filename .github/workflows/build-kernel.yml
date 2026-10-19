@@ -1,0 +1,42 @@
+name: Build CronosKernel DT2W
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bc bison flex \
+              libssl-dev libncurses-dev git wget unzip python3
+
+      - name: Setup Linaro toolchain
+        run: |
+          wget https://releases.linaro.org/components/toolchain/binaries/latest-4.9/aarch64-linux-gnu/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz
+          tar xf gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz
+          echo "$PWD/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu/bin" >> $GITHUB_PATH
+          aarch64-linux-gnu-gcc --version
+
+      - name: Patch DT2W
+        run: |
+          sed -i 's/#define DT2W_DEFAULT\t\t0/#define DT2W_DEFAULT\t\t1/' \
+              drivers/input/touchscreen/wake_gestures.c
+          grep -n "DT2W_DEFAULT" drivers/input/touchscreen/wake_gestures.c
+
+      - name: Build kernel
+        run: |
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make O=out hero2_defconfig
+          make O=out -j$(nproc)
+
+      - name: Upload boot image
+        uses: actions/upload-artifact@v4
+        with:
+          name: cronos-dt2w-boot
+          path: out/arch/arm64/boot/Image-dtb
