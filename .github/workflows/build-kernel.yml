@@ -24,12 +24,14 @@ jobs:
 
       - name: Patch DT2W
         run: |
+          cd Cronos
           sed -i 's/#define DT2W_DEFAULT\t\t0/#define DT2W_DEFAULT\t\t1/' \
               drivers/input/touchscreen/wake_gestures.c
           grep -n "DT2W_DEFAULT" drivers/input/touchscreen/wake_gestures.c
 
       - name: Build kernel
         run: |
+          cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           make O=out hero2_defconfig
