@@ -20,7 +20,9 @@ jobs:
 
       - name: Download kernel source from upstream
         run: |
-          git clone --depth 1 -b cronos https://github.com/ananjaser1211/Cronos_8890.git Cronos
+          curl -L https://codeload.github.com/ananjaser1211/Cronos_8890/zip/refs/heads/cronos -o kernel.zip
+          unzip -q kernel.zip
+          mv Cronos_8890-cronos Cronos
           ls Cronos/drivers/input/touchscreen/wake_gestures.c
 
       - name: Patch DT2W
