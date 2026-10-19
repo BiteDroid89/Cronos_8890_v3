@@ -9,16 +9,21 @@ jobs:
     timeout-minutes: 60
     
     steps:
-      - name: Checkout repository
+      - name: Checkout workflow
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential bc bison flex \
               libssl-dev libncurses-dev git wget unzip python3 gcc-aarch64-linux-gnu
+
+      - name: Download kernel source from upstream
+        run: |
+          wget https://github.com/ananjaser1211/Cronos_8890/archive/refs/heads/cronos.zip -O kernel.zip
+          unzip -q kernel.zip
+          mv Cronos_8890-cronos Cronos
+          ls Cronos/drivers/input/touchscreen/wake_gestures.c
 
       - name: Patch DT2W
         run: |
