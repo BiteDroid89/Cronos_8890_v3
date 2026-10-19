@@ -9,17 +9,16 @@ jobs:
     timeout-minutes: 60
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential bc bison flex \
-              libssl-dev libncurses-dev git wget unzip python3
-
-      - name: Install ARM64 cross-compiler
-        run: |
-          sudo apt update
-          sudo apt install -y gcc-aarch64-linux-gnu
-          aarch64-linux-gnu-gcc --version
+              libssl-dev libncurses-dev git wget unzip python3 gcc-aarch64-linux-gnu
 
       - name: Patch DT2W
         run: |
