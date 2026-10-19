@@ -17,14 +17,7 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential bc bison flex \
               libssl-dev libelf-dev libncurses-dev git wget unzip \
-              python3 ccache
-
-      - name: Setup Linaro 4.9.4 toolchain
-        run: |
-          wget --timeout=300 https://releases.linaro.org/components/toolchain/binaries/4.9-2017.01/aarch64-linux-gnu/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz
-          tar xf gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz
-          echo "$PWD/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu/bin" >> $GITHUB_PATH
-          aarch64-linux-gnu-gcc --version
+              python3 gcc-aarch64-linux-gnu ccache
 
       - name: Checkout kernel source from upstream
         uses: actions/checkout@v4
@@ -35,6 +28,16 @@ jobs:
 
       - name: Verify kernel source
         run: ls Cronos/drivers/input/touchscreen/wake_gestures.c
+
+      - name: Fix kernel source for GCC 13
+        run: |
+          cd Cronos
+          sed -i 's/#define exynos_ss_panic_handler_safe() do { } while(0)/#define exynos_ss_panic_handler_safe(...) do { } while(0)/' \
+              include/linux/exynos-ss.h
+          sed -i 's/static inline void void/static inline void/' \
+              include/linux/nmi.h
+          grep -n "exynos_ss_panic_handler_safe" include/linux/exynos-ss.h
+          grep -n "sl_softirq_entry" include/linux/nmi.h
 
       - name: Patch DT2W
         run: |
