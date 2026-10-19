@@ -16,7 +16,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential bc bison flex \
-              libssl-dev libncurses-dev git wget unzip python3 gcc-aarch64-linux-gnu
+              libssl-dev libelf-dev libncurses-dev git wget unzip \
+              python3 gcc-aarch64-linux-gnu
 
       - name: Checkout kernel source from upstream
         uses: actions/checkout@v4
@@ -40,6 +41,9 @@ jobs:
           cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
+          which aarch64-linux-gnu-gcc
+          aarch64-linux-gnu-gcc --version
+          ls arch/arm64/configs/ | grep hero
           make O=out hero2_defconfig
           make O=out -j$(nproc)
 
