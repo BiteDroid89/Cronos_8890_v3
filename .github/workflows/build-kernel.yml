@@ -33,12 +33,10 @@ jobs:
         run: |
           cd Cronos
           sed -i '1i #include <asm/bug.h>' include/linux/exynos-ss.h
-          sed -i 's/#define exynos_ss_panic_handler_safe() do { } while(0)/#define exynos_ss_panic_handler_safe(...) do { } while(0)/' \
-              include/linux/exynos-ss.h
+          sed -i 's/) do { } while(0)/,...) do { } while(0)/g' include/linux/exynos-ss.h
           sed -i 's/static inline void void/static inline void/' \
               include/linux/nmi.h
-          grep -n "exynos_ss_panic_handler_safe" include/linux/exynos-ss.h
-          grep -n "BUG" include/linux/exynos-ss.h | head -5
+          grep -n "#define exynos_ss" include/linux/exynos-ss.h
 
       - name: Patch DT2W
         run: |
