@@ -17,7 +17,14 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential bc bison flex \
               libssl-dev libelf-dev libncurses-dev git wget unzip \
-              python3 gcc-aarch64-linux-gnu ccache
+              python3 ccache
+
+      - name: Setup Linaro 4.9.4 toolchain
+        run: |
+          wget -q --timeout=300 https://mirrors.dotsrc.org/armbian-dl/_toolchain/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz -O linaro.tar.xz
+          tar xf linaro.tar.xz
+          echo "$PWD/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu/bin" >> $GITHUB_PATH
+          aarch64-linux-gnu-gcc --version
 
       - name: Checkout kernel source from upstream
         uses: actions/checkout@v4
@@ -26,10 +33,18 @@ jobs:
           ref: cronos
           path: Cronos
 
-      - name: Verify kernel source
-        run: ls Cronos/drivers/input/touchscreen/wake_gestures.c
+      - name: Generate config
+        run: |
+          cd Cronos
+          cp arch/arm64/configs/exynos8890_defconfig arch/arm64/configs/tmp_defconfig
+          cat arch/arm64/configs/hero2_defconfig >> arch/arm64/configs/tmp_defconfig
+          cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+          cat arch/arm64/configs/cronos_defconfig >> arch/arm64/configs/tmp_defconfig
+          echo "CONFIG_ALWAYS_PERMISSIVE=y" >> arch/arm64/configs/tmp_defconfig
+          echo "CONFIG_HALL_EVENT_REVERSE=y" >> arch/arm64/configs/tmp_defconfig
+          grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS" arch/arm64/configs/tmp_defconfig
 
-      - name: Fix kernel source for GCC 13
+      - name: Fix kernel source for build
         run: |
           cd Cronos
           sed -i '1i #include <asm/bug.h>' include/linux/exynos-ss.h
@@ -38,8 +53,8 @@ jobs:
           sed -i 's/static inline void void/static inline void/' include/linux/nmi.h
           sed -i '/rq_of(cfs_rq)->avg/s/^/\/\/ patched out: /' kernel/sched/fair.c
           sed -i 's/extern void exynos_ss_panic_handler_safe/\/\/ patched: extern void exynos_ss_panic_handler_safe/' arch/arm64/mm/fault.c
-          grep -n "#define exynos_ss" include/linux/exynos-ss.h
-          grep -n "patched: extern void" arch/arm64/mm/fault.c
+          sed -i -e 's/#alloc, #execinstr/"ax"/g' -e 's/#alloc/"a"/g' -e 's/#execinstr/"x"/g' arch/arm64/mm/proc.S
+          grep -n "text.init" arch/arm64/mm/proc.S
 
       - name: Patch DT2W
         run: |
@@ -53,11 +68,12 @@ jobs:
           cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          make O=out hero2_defconfig
-          make O=out -j$(nproc) KCFLAGS="-Wno-error=implicit-function-declaration"
+          make O=out tmp_defconfig
+          make O=out -j$(nproc)
+          ls -la out/arch/arm64/boot/Image
 
-      - name: Upload boot image
+      - name: Upload kernel image
         uses: actions/upload-artifact@v4
         with:
-          name: cronos-dt2w-boot
-          path: out/arch/arm64/boot/Image-dtb
+          name: cronos-dt2w-image
+          path: Cronos/out/arch/arm64/boot/Image
