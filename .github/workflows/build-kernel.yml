@@ -69,6 +69,8 @@ jobs:
           cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
+          export PLATFORM_VERSION=10
+          export ANDROID_MAJOR_VERSION=q
           make O=out tmp_defconfig
           make O=out -j$(nproc)
           ls -la out/arch/arm64/boot/Image
