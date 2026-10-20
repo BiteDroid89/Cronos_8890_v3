@@ -33,13 +33,13 @@ jobs:
         run: |
           cd Cronos
           sed -i '1i #include <asm/bug.h>' include/linux/exynos-ss.h
-          sed -i 's/#define \([a-z_0-9]*\)() do { } while(0)/#define \1(...) do { } while(0)/g' \
-              include/linux/exynos-ss.h
-          sed -i 's/#define \([a-z_0-9]*\)(\([a-z_0-9, ]\+\)) do { } while(0)/#define \1(\2,...) do { } while(0)/g' \
-              include/linux/exynos-ss.h
-          sed -i 's/static inline void void/static inline void/' \
-              include/linux/nmi.h
+          sed -i 's/#define \(exynos_ss_[a-z_0-9]*\)()/#define \1(...)/g' include/linux/exynos-ss.h
+          sed -i 's/#define \(exynos_ss_[a-z_0-9]*\)(\([a-z_0-9, ]\+\))/#define \1(\2,...)/g' include/linux/exynos-ss.h
+          sed -i 's/static inline void void/static inline void/' include/linux/nmi.h
+          sed -i 's/rq_of(cfs_rq)->avg.load_avg_ratio += se->avg.load_avg_ratio;/\/\/ patched out/' kernel/sched/fair.c
+          sed -i 's/rq_of(cfs_rq)->avg.load_avg_ratio -= se->avg.load_avg_ratio;/\/\/ patched out/' kernel/sched/fair.c
           grep -n "#define exynos_ss" include/linux/exynos-ss.h
+          grep -n "patched out" kernel/sched/fair.c
 
       - name: Patch DT2W
         run: |
