@@ -34,7 +34,7 @@ jobs:
           ref: cronos
           path: Cronos
 
-      - name: Generate config
+      - name: Generate config and device tree
         run: |
           cd Cronos
           cp arch/arm64/configs/exynos8890_defconfig arch/arm64/configs/tmp_defconfig
@@ -43,7 +43,9 @@ jobs:
           cat arch/arm64/configs/cronos_defconfig >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_ALWAYS_PERMISSIVE=y" >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_HALL_EVENT_REVERSE=y" >> arch/arm64/configs/tmp_defconfig
+          cp arch/arm64/boot/exynos8890_Oneui.dtsi arch/arm64/boot/dts/exynos8890.dtsi
           grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS" arch/arm64/configs/tmp_defconfig
+          ls -la arch/arm64/boot/dts/exynos8890.dtsi
 
       - name: Fix kernel source for build
         run: |
