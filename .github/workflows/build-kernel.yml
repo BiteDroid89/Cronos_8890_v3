@@ -21,8 +21,9 @@ jobs:
 
       - name: Setup Linaro 4.9.4 toolchain
         run: |
-          wget -q --timeout=300 https://mirrors.dotsrc.org/armbian-dl/_toolchain/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz -O linaro.tar.xz
+          wget --timeout=300 https://mirrors.dotsrc.org/armbian-dl/_toolchain/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu.tar.xz -O linaro.tar.xz
           tar xf linaro.tar.xz
+          export PATH="$PWD/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu/bin:$PATH"
           echo "$PWD/gcc-linaro-4.9.4-2017.01-x86_64_aarch64-linux-gnu/bin" >> $GITHUB_PATH
           aarch64-linux-gnu-gcc --version
 
