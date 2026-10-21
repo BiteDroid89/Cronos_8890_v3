@@ -34,7 +34,7 @@ jobs:
           ref: cronos
           path: Cronos
 
-      - name: Generate config and device tree
+      - name: Generate config
         run: |
           cd Cronos
           cp arch/arm64/configs/exynos8890_defconfig arch/arm64/configs/tmp_defconfig
@@ -43,9 +43,7 @@ jobs:
           cat arch/arm64/configs/cronos_defconfig >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_ALWAYS_PERMISSIVE=y" >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_HALL_EVENT_REVERSE=y" >> arch/arm64/configs/tmp_defconfig
-          cp arch/arm64/boot/exynos8890_Oneui.dtsi arch/arm64/boot/dts/exynos8890.dtsi
           grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS" arch/arm64/configs/tmp_defconfig
-          ls -la arch/arm64/boot/dts/exynos8890.dtsi
 
       - name: Fix kernel source for build
         run: |
@@ -71,14 +69,12 @@ jobs:
           cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          export PLATFORM_VERSION=10
-          export ANDROID_MAJOR_VERSION=q
-          make tmp_defconfig
-          make -j$(nproc)
-          ls -la arch/arm64/boot/Image
+          make O=out tmp_defconfig
+          make O=out -j$(nproc)
+          ls -la out/arch/arm64/boot/Image
 
       - name: Upload kernel image
         uses: actions/upload-artifact@v4
         with:
           name: cronos-dt2w-image
-          path: Cronos/arch/arm64/boot/Image
+          path: Cronos/out/arch/arm64/boot/Image
