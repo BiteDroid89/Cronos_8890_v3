@@ -43,8 +43,18 @@ jobs:
           cat arch/arm64/configs/cronos_defconfig >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_ALWAYS_PERMISSIVE=y" >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_HALL_EVENT_REVERSE=y" >> arch/arm64/configs/tmp_defconfig
+          echo "# CONFIG_KSU is not set" >> arch/arm64/configs/tmp_defconfig
           cp arch/arm64/boot/exynos8890_Oneui.dtsi arch/arm64/boot/dts/exynos8890.dtsi
-          grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS" arch/arm64/configs/tmp_defconfig
+          grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS|KSU" arch/arm64/configs/tmp_defconfig
+
+      - name: Disable KernelSU
+        run: |
+          cd Cronos
+          echo 'exit 0' > scripts/fetch-latest-kernelsu.sh
+          mkdir -p drivers/kernelsu
+          printf 'config KSU\n\tbool "KernelSU"\n\tdefault n\n' > drivers/kernelsu/Kconfig
+          printf 'obj-$(CONFIG_KSU) += kernelsu.o\n' > drivers/kernelsu/Makefile
+          cat drivers/kernelsu/Kconfig
 
       - name: Fix kernel source for build
         run: |
@@ -57,18 +67,6 @@ jobs:
           sed -i 's/extern void exynos_ss_panic_handler_safe/\/\/ patched: extern void exynos_ss_panic_handler_safe/' arch/arm64/mm/fault.c
           sed -i -e 's/#alloc, #execinstr/"ax"/g' -e 's/#alloc/"a"/g' -e 's/#execinstr/"x"/g' arch/arm64/mm/proc.S
           grep -n "text.init" arch/arm64/mm/proc.S
-
-      - name: Fetch KernelSU
-        run: |
-          cd Cronos
-          bash scripts/fetch-latest-kernelsu.sh
-          ls drivers/kernelsu/ | head
-
-      - name: Fix KernelSU for 3.18
-        run: |
-          cd Cronos
-          sed -i 's/} while (!get_cred_rcu(cred));/} while (!cred);/' drivers/kernelsu/core_hook.c
-          grep -n "while (!cred)" drivers/kernelsu/core_hook.c
 
       - name: Patch DT2W
         run: |
