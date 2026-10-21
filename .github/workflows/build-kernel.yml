@@ -93,10 +93,15 @@ jobs:
           grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS|TOUCHSCREEN_FTS7|KSU|ALWAYS_PERMISSIVE|HALL_EVENT|MODEL_HERO2LTE|SEC_TS|PANEL_|SENSORS_" .config
 
       - name: Upload config
+        run: |
+          cd Cronos
+          cp .config kernel_config.txt
+
+      - name: Upload config file
         uses: actions/upload-artifact@v4
         with:
           name: kernel-config
-          path: Cronos/.config
+          path: Cronos/kernel_config.txt
 
       - name: Upload kernel image
         uses: actions/upload-artifact@v4
