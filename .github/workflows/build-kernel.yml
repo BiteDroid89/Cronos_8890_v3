@@ -87,6 +87,17 @@ jobs:
           make PLATFORM_VERSION=10 -j$(nproc)
           ls -la arch/arm64/boot/Image
 
+      - name: Verify config
+        run: |
+          cd Cronos
+          grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS|TOUCHSCREEN_FTS7|KSU|ALWAYS_PERMISSIVE|HALL_EVENT|MODEL_HERO2LTE|SEC_TS|PANEL_|SENSORS_" .config
+
+      - name: Upload config
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-config
+          path: Cronos/.config
+
       - name: Upload kernel image
         uses: actions/upload-artifact@v4
         with:
