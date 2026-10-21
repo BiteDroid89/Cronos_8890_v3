@@ -34,7 +34,7 @@ jobs:
           ref: cronos
           path: Cronos
 
-      - name: Generate config
+      - name: Generate config and device tree
         run: |
           cd Cronos
           cp arch/arm64/configs/exynos8890_defconfig arch/arm64/configs/tmp_defconfig
@@ -43,6 +43,7 @@ jobs:
           cat arch/arm64/configs/cronos_defconfig >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_ALWAYS_PERMISSIVE=y" >> arch/arm64/configs/tmp_defconfig
           echo "CONFIG_HALL_EVENT_REVERSE=y" >> arch/arm64/configs/tmp_defconfig
+          cp arch/arm64/boot/exynos8890_Oneui.dtsi arch/arm64/boot/dts/exynos8890.dtsi
           grep -E "WAKE_GESTURES|TOUCHSCREEN_SEC_TS" arch/arm64/configs/tmp_defconfig
 
       - name: Fix kernel source for build
@@ -57,6 +58,18 @@ jobs:
           sed -i -e 's/#alloc, #execinstr/"ax"/g' -e 's/#alloc/"a"/g' -e 's/#execinstr/"x"/g' arch/arm64/mm/proc.S
           grep -n "text.init" arch/arm64/mm/proc.S
 
+      - name: Fetch KernelSU
+        run: |
+          cd Cronos
+          bash scripts/fetch-latest-kernelsu.sh
+          ls drivers/kernelsu/ | head
+
+      - name: Fix KernelSU for 3.18
+        run: |
+          cd Cronos
+          sed -i 's/} while (!get_cred_rcu(cred));/} while (!cred);/' drivers/kernelsu/core_hook.c
+          grep -n "while (!cred)" drivers/kernelsu/core_hook.c
+
       - name: Patch DT2W
         run: |
           cd Cronos
@@ -69,12 +82,15 @@ jobs:
           cd Cronos
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          make O=out tmp_defconfig
-          make O=out -j$(nproc)
-          ls -la out/arch/arm64/boot/Image
+          export PLATFORM_VERSION=10
+          export ANDROID_MAJOR_VERSION=q
+          echo "PLATFORM_VERSION=$PLATFORM_VERSION"
+          make PLATFORM_VERSION=10 tmp_defconfig
+          make PLATFORM_VERSION=10 -j$(nproc)
+          ls -la arch/arm64/boot/Image
 
       - name: Upload kernel image
         uses: actions/upload-artifact@v4
         with:
           name: cronos-dt2w-image
-          path: Cronos/out/arch/arm64/boot/Image
+          path: Cronos/arch/arm64/boot/Image
